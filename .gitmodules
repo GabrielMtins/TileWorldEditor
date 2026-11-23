@@ -1,3 +1,12 @@
 [submodule "external/imgui"]
 	path = external/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "external/TinyCG"]
+	path = external/TinyCG
+	url = https://github.com/GabrielMtins/TinyCG.git
+[submodule "external/cglm"]
+	path = external/cglm
+	url = https://github.com/recp/cglm.git
+[submodule "external/TileWorld"]
+	path = external/TileWorld
+	url = https://github.com/GabrielMtins/TileWorld.git

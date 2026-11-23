@@ -34,6 +34,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"${PROJECT_SOURCE_DIR}/include/"
 	"${PROJECT_SOURCE_DIR}/external/imgui/"
 	"${PROJECT_SOURCE_DIR}/external/imgui/backends/"
+	"${PROJECT_SOURCE_DIR}/external/cglm/include/"
+	"${PROJECT_SOURCE_DIR}/external/TinyCG/"
+	"${PROJECT_SOURCE_DIR}/external/TileWorld/"
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
