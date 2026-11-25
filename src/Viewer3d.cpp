@@ -1,5 +1,7 @@
 #include "Viewer3d.hpp"
 
+#include <math.h>
+
 std::unique_ptr<Viewer3d> Viewer3d::create(SDL_Renderer *renderer) {
 	SDL_Texture *texture = SDL_CreateTexture(
 			renderer,
@@ -39,16 +41,43 @@ Viewer3d::Viewer3d(SDL_Texture *texture) :
 {
 }
 
+vec3s Viewer3d::getSolidColor(const TW_Vertex &vertex) {
+	vec3s normal = glms_vec3_make(vertex.normal);
+	float res = 0.0f;
+
+	if(fabsf(normal.raw[0]) > 0.9f) {
+		res = 0.4f;
+	}
+
+	if(fabsf(normal.raw[2]) > 0.9f) {
+		res = 0.7f;
+	}
+
+	if(fabsf(normal.raw[1]) > 0.9f) {
+		res = 1.0f;
+	}
+
+	return vec3s{{res, res, res}};
+}
+
 void Viewer3d::putPixel(int x, int y, const TW_Vertex& vertex) {
-	uint8_t r, g, b;
 	uint32_t *pixel = ((uint32_t *) (surface->pixels));
 	pixel += x + y * surface->pitch / 4;
+	vec3s color = {0};
 
 	switch(view_mode) {
 		case ViewMode::SOLID:
+			color = getSolidColor(vertex);
 			break;
 
 		default:
 			break;
 	}
+
+	*pixel = SDL_MapSurfaceRGB(
+			surface,
+			color.raw[0] * 255,
+			color.raw[1] * 255,
+			color.raw[2] * 255
+			);
 }

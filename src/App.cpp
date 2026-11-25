@@ -101,8 +101,13 @@ void App::processEvents(void) {
 
 /* Insert your code here. */
 void App::init(void) {
+	viewer2d = Viewer2d::create(renderer);
+
+	auto& cfg = world.getTextureConfig(0, 0, World::TextureType::WALL);
+	cfg.id = 1;
 }
 
 void App::step(void) {
-	ImGui::ShowDemoWindow();
+	viewer2d->show(world);
+	//ImGui::ShowDemoWindow();
 }

@@ -5,6 +5,7 @@
 
 #include <TinyCG.h>
 #include <TileWorld.h>
+#include <array>
 
 class Viewer3d {
 	public:
@@ -16,6 +17,8 @@ class Viewer3d {
 	private:
 		static constexpr int width = 640;
 		static constexpr int height = 480;
+
+		std::array<float, width * height> depth_buffer;
 
 		enum class ViewMode {
 			SOLID = 0,
@@ -29,6 +32,7 @@ class Viewer3d {
 		TCG_Data cg;
 
 		Viewer3d(SDL_Texture *texture);
+		static vec3s getSolidColor(const TW_Vertex &vertex);
 		void putPixel(int x, int y, const TW_Vertex& vertex);
 };
 
