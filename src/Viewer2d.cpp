@@ -18,6 +18,10 @@ std::unique_ptr<Viewer2d> Viewer2d::create(SDL_Renderer *renderer, const Texture
 	return std::unique_ptr<Viewer2d>(new Viewer2d(renderer, background_texture, texture_list, tool_list));
 }
 
+Viewer2d::~Viewer2d(void) {
+	SDL_DestroyTexture(background_texture);
+}
+
 void Viewer2d::show(World &world) {
 	ImGui::Begin("Editor");
 	showComboMenu();
@@ -37,6 +41,10 @@ Viewer2d::Viewer2d(SDL_Renderer *renderer, SDL_Texture *background_texture, cons
 }
 
 void Viewer2d::handleInput(World& world) {
+	if(ImGui::IsKeyDown(ImGuiKey_Escape)) {
+		tool_list.cancelSelection();
+	}
+
 	if(!ImGui::IsItemActive()) {
 		return;
 	}
@@ -59,11 +67,7 @@ void Viewer2d::handleInput(World& world) {
 	cursor_pos = glms_vec2_sub(cursor_pos, half_num_tiles_shown);
 
 	tool_list.setEditMode(edit_mode);
-	tool_list.use(
-			world, 
-			(int) cursor_pos.raw[0],
-			(int) cursor_pos.raw[1]
-			);
+	tool_list.use(world, cursor_pos);
 }
 
 void Viewer2d::showComboMenu(void) {
@@ -153,7 +157,7 @@ void Viewer2d::renderTile(const World& world, int i, int j) {
 		tile_size.raw[0], tile_size.raw[1]
 	};
 
-	SDL_FRect src = texture_list.getCellFRect(cfg.id - 1);
+	SDL_FRect src = texture_list.getCellFRect(cfg.id);
 
 	SDL_RenderTexture(
 			renderer,

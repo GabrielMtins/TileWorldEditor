@@ -71,6 +71,14 @@ SDL_FRect TextureList::getCellFRect(int cell) const {
 	};
 }
 
+Point2i TextureList::getCellSize(void) const {
+	return Point2i(cell_width, cell_height);
+}
+
+Point2i TextureList::getNumCells(void) const {
+	return Point2i(num_cells_x, num_cells_y);
+}
+
 uint32_t TextureList::getPixelNorm(int cell, float x, float y) const {
 	int xi = x * cell_width;
 	int yi = y * cell_height;

@@ -9,6 +9,7 @@
 class Viewer2d {
 	public:
 		static std::unique_ptr<Viewer2d> create(SDL_Renderer *renderer, const TextureList& texture_list, ToolList& tool_list);
+		~Viewer2d(void);
 		void show(World &world);
 
 	private:

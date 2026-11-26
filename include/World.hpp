@@ -29,6 +29,7 @@ class World {
 
 		size_t getWidth(void) const;
 		size_t getHeight(void) const;
+		bool inBounds(vec2s point) const;
 		bool inBounds(int i, int j) const;
 
 		bool tileEquals(EditMode mode, const TW_Tile& tile, size_t i, size_t j) const;

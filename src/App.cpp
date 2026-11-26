@@ -1,4 +1,5 @@
 #include "App.hpp"
+#include "font_awesome.h"
 
 #include <cstdlib>
 
@@ -38,14 +39,25 @@ std::unique_ptr<App> App::create(const char *title) {
 
 	ImGuiStyle& style = ImGui::GetStyle();
 	ImGui::StyleColorsDark();
-	/*
-	style.FrameRounding = 3.0f;
-	style.GrabRounding = 3.0f;
-	*/
+
     style.FontSizeBase = 18.0f;
 
 	style.ScaleAllSizes(main_scale);
 	style.FontScaleDpi = main_scale;
+
+	ImFontConfig icon_config{};
+
+	io.Fonts->AddFontDefault();
+	icon_config.MergeMode = true;
+	static const ImWchar icon_ranges[] = {0xf000, 0xf3ff, 0};
+
+	io.Fonts->AddFontFromMemoryTTF(
+			(void *) font_awesome_otf,
+			font_awesome_otf_len,
+			0.0f,
+			&icon_config,
+			icon_ranges
+			);
 
 	ImGui_ImplSDL3_InitForSDLRenderer(app->window, app->renderer);
 	ImGui_ImplSDLRenderer3_Init(app->renderer);
@@ -103,6 +115,7 @@ void App::processEvents(void) {
 
 /* Insert your code here. */
 void App::init(void) {
+	SDL_SetWindowFullscreen(window, true);
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
 	texture_list = TextureList::load(renderer, "tilemap.png", 64, 64);
@@ -111,30 +124,13 @@ void App::init(void) {
 	viewer2d = Viewer2d::create(renderer, *texture_list, tool_list);
 	assert(viewer2d);
 
-	texture_viewer = std::make_unique<TextureViewer>(*texture_list, tool_list);
+	texture_viewer = TextureViewer::create(renderer, *texture_list, tool_list);
 	assert(texture_viewer);
-
-	for(int i = 0; i < 8; i++) {
-		{
-			auto& cfg = world.getTextureConfig(i, 0, World::TextureType::WALL);
-			cfg.id = 1;
-		}
-		{
-			auto& cfg = world.getTextureConfig(0, i, World::TextureType::WALL);
-			cfg.id = 1;
-		}
-		{
-			auto& cfg = world.getTextureConfig(i, 7, World::TextureType::WALL);
-			cfg.id = 1;
-		}
-		{
-			auto& cfg = world.getTextureConfig(7, i, World::TextureType::WALL);
-			cfg.id = 1;
-		}
-	}
 }
 
 void App::step(void) {
 	viewer2d->show(world);
 	texture_viewer->show();
+	toolbar.show();
+	tool_list.setTool(toolbar.getTool());
 }

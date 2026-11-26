@@ -7,13 +7,21 @@
 
 class TextureViewer {
 	public:
-		TextureViewer(const TextureList& texture_list, const ToolList &tool_list);
+		static std::unique_ptr<TextureViewer> create(SDL_Renderer *renderer, const TextureList& texture_list, ToolList &tool_list);
+		~TextureViewer(void);
 
 		void show(void);
 
 	private:
+		SDL_Renderer *renderer = nullptr;
+		SDL_Texture *background_texture = nullptr;
+
 		const TextureList& texture_list;
-		const ToolList& tool_list;
+		ToolList& tool_list;
+
+		TextureViewer(SDL_Renderer *renderer, SDL_Texture *background_texture, const TextureList& texture_list, ToolList &tool_list);
+		void render(void);
+		void handleInput(void);
 };
 
 #endif

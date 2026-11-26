@@ -9,6 +9,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/fonts/font_awesome.h")
+	message("Generating ./fonts/font_awesome.h")
+	execute_process(COMMAND sh -c "cd ${PROJECT_SOURCE_DIR}/fonts; xxd -i font_awesome.otf > font_awesome.h")
+endif()
+
 file(GLOB_RECURSE all_SRCS
 		"${PROJECT_SOURCE_DIR}/src/*.cpp"
 		"${PROJECT_SOURCE_DIR}/src/*.c"
@@ -32,6 +37,7 @@ pkg_search_module(SDL3 REQUIRED sdl3)
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${SDL3_INCLUDE_DIRS}
 	"${PROJECT_SOURCE_DIR}/include/"
+	"${PROJECT_SOURCE_DIR}/fonts/"
 	"${PROJECT_SOURCE_DIR}/external/imgui/"
 	"${PROJECT_SOURCE_DIR}/external/imgui/backends/"
 	"${PROJECT_SOURCE_DIR}/external/cglm/include/"

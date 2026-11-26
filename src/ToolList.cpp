@@ -11,12 +11,24 @@ void ToolList::setTool(Tool tool) {
 	this->tool = tool;
 }
 
+void ToolList::setTextureId(uint8_t texture_id) {
+	this->texture_id = texture_id;
+}
+
+uint8_t ToolList::getTextureId(void) const {
+	return texture_id;
+}
+
 const Selection& ToolList::getSelection(void) const {
 	return selection;
 }
 
-void ToolList::use(World& world, int i, int j) {
-	#define EXPAND_AS_CASE(id, func) case Tool::id: func(world, i, j); break;
+void ToolList::cancelSelection(void) {
+	selection.active = false;
+}
+
+void ToolList::use(World& world, vec2s pos) {
+	#define EXPAND_AS_CASE(id, func, ...) case Tool::id: func(world, pos); break;
 	switch(tool) {
 		FOR_TOOL_LIST(EXPAND_AS_CASE)
 	}
@@ -55,35 +67,45 @@ void ToolList::editTile(World& world, int i, int j) const {
 	}
 }
 
-void ToolList::useBrush(World& world, int i, int j) {
-	if(!world.inBounds(i, j)) return;
-	if(!selection.inBounds(i, j)) return;
-
-	editTile(world, i, j);
+void ToolList::editTile(World& world, vec2s pos) const {
+	editTile(
+			world,
+			int(pos.raw[0]),
+			int(pos.raw[1])
+			);
 }
 
-void ToolList::useSelection(World& world, int i, int j) {
+void ToolList::useBrush(World& world, vec2s pos) {
+	if(!world.inBounds(pos)) return;
+	if(!selection.inBounds(pos)) return;
+
+	editTile(world, pos);
+}
+
+void ToolList::useSelection(World& world, vec2s pos) {
 	if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
 		selection.active = false;
 	}
 
-	if(!world.inBounds(i, j)) return;
+	if(!world.inBounds(pos)) return;
 
 	if(!selection.active) {
-		selection.begin = Point2i(i, j);
+		selection.begin = VEC2S_TO_POINT2I(pos);
 		selection.active = true;
 	}
 
-	selection.end = Point2i(i, j);
+	selection.end = VEC2S_TO_POINT2I(pos);
 
 	selection.setMinMax();
 }
 
-void ToolList::useBucket(World& world, int i, int j) {
-	if(!world.inBounds(i, j)) return;
+void ToolList::useBucket(World& world, vec2s pos) {
+	if(!world.inBounds(pos)) return;
 	if(!ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
 		return;
 	}
+
+	auto [i, j] = VEC2S_TO_POINT2I(pos);
 
 	const TW_Tile begin_tile = world.getTile(i, j);
 	editTile(world, i, j);
@@ -120,5 +142,12 @@ void ToolList::useBucket(World& world, int i, int j) {
 		to_visit.emplace(x - 1, y);
 		to_visit.emplace(x, y + 1);
 		to_visit.emplace(x, y - 1);
+	}
+}
+
+// TODO
+void ToolList::usePicker(World& world, vec2s pos) {
+	if(!world.inBounds(pos)) {
+		return;
 	}
 }

@@ -10,6 +10,7 @@
 #include "TextureList.hpp"
 #include "TextureViewer.hpp"
 #include "ToolList.hpp"
+#include "Toolbar.hpp"
 
 class App {
 	public:
@@ -27,6 +28,7 @@ class App {
 
 		World world = World(256, 256);
 		ToolList tool_list;
+		Toolbar toolbar;
 		std::unique_ptr<Viewer2d> viewer2d = nullptr;
 		std::unique_ptr<TextureList> texture_list = nullptr;
 		std::unique_ptr<TextureViewer> texture_viewer = nullptr;

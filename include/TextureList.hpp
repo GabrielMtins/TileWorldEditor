@@ -11,6 +11,8 @@ class TextureList {
 		SDL_Texture * getTexture(void) const;
 		SDL_Rect getCellRect(int cell) const;
 		SDL_FRect getCellFRect(int cell) const;
+		Point2i getCellSize(void) const;
+		Point2i getNumCells(void) const;
 		uint32_t getPixelNorm(int cell, float x, float y) const;
 		uint32_t getPixel(int cell, int x, int y) const;
 

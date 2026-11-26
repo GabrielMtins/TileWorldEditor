@@ -18,6 +18,16 @@ size_t World::getHeight(void) const {
 	return height;
 }
 
+bool World::inBounds(vec2s point) const {
+	if(point.raw[0] < 0.0f) return false;
+	if(point.raw[1] < 0.0f) return false;
+
+	if(point.raw[0] >= float(width)) return false;
+	if(point.raw[1] >= float(height)) return false;
+
+	return true;
+}
+
 bool World::inBounds(int i, int j) const {
 	return i >= 0 && j >= 0 && i < int(width) && j < int(height);
 }
