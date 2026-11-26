@@ -6,7 +6,7 @@ std::unique_ptr<Viewer2d> Viewer2d::create(SDL_Renderer *renderer, const Texture
 	SDL_Texture *background_texture = SDL_CreateTexture(
 			renderer,
 			SDL_PIXELFORMAT_RGBA32,
-			SDL_TEXTUREACCESS_STREAMING,
+			SDL_TEXTUREACCESS_TARGET,
 			background_width,
 			background_height
 			);
@@ -15,7 +15,7 @@ std::unique_ptr<Viewer2d> Viewer2d::create(SDL_Renderer *renderer, const Texture
 		return nullptr;
 	}
 
-	return std::unique_ptr<Viewer2d>(new Viewer2d(background_texture, texture_list, tool_list));
+	return std::unique_ptr<Viewer2d>(new Viewer2d(renderer, background_texture, texture_list, tool_list));
 }
 
 void Viewer2d::show(World &world) {
@@ -28,7 +28,8 @@ void Viewer2d::show(World &world) {
 	render(world);
 }
 
-Viewer2d::Viewer2d(SDL_Texture *background_texture, const TextureList& texture_list, ToolList& tool_list) :
+Viewer2d::Viewer2d(SDL_Renderer *renderer, SDL_Texture *background_texture, const TextureList& texture_list, ToolList& tool_list) :
+	renderer(renderer),
 	background_texture(background_texture),
 	texture_list(texture_list),
 	tool_list(tool_list)
@@ -98,11 +99,14 @@ void Viewer2d::showImage(void) {
 }
 
 void Viewer2d::render(const World &world) {
-	SDL_LockTextureToSurface(background_texture, nullptr, &background_surface);
+	SDL_SetRenderTarget(renderer, background_texture);
+	SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xff);
+	SDL_RenderClear(renderer);
 
 	renderTiles(world);
+	renderSelection();
 
-	SDL_UnlockTexture(background_texture);
+	SDL_SetRenderTarget(renderer, nullptr);
 }
 
 void Viewer2d::renderTiles(const World &world) {
@@ -123,14 +127,16 @@ void Viewer2d::renderTiles(const World &world) {
 	}
 }
 
-vec2s Viewer2d::worldToScreenCoords(float i, float j) const {
-	vec2s pos = {float(i), float(j)};
-
+vec2s Viewer2d::worldToScreenCoords(vec2s pos) const {
 	pos = glms_vec2_sub(pos, camera);
 	pos = glms_vec2_add(pos, half_num_tiles_shown);
 	pos = glms_vec2_mul(pos, tile_size);
 
 	return pos;
+}
+
+vec2s Viewer2d::worldToScreenCoords(float i, float j) const {
+	return worldToScreenCoords(vec2s{float(i), float(j)});
 }
 
 void Viewer2d::renderTile(const World& world, int i, int j) {
@@ -142,42 +148,57 @@ void Viewer2d::renderTile(const World& world, int i, int j) {
 
 	vec2s pos = worldToScreenCoords(i, j);
 
-	SDL_Rect dst = {
-		(int) pos.raw[0], (int) pos.raw[1],
-		(int) tile_size.raw[0], (int) tile_size.raw[1]
+	SDL_FRect dst = {
+		pos.raw[0], pos.raw[1],
+		tile_size.raw[0], tile_size.raw[1]
 	};
 
-	SDL_Rect src = texture_list.getCellRect(cfg.id - 1);
+	SDL_FRect src = texture_list.getCellFRect(cfg.id - 1);
 
-	SDL_BlitSurfaceScaled(
-			texture_list.getSurface(),
+	SDL_RenderTexture(
+			renderer,
+			texture_list.getTexture(),
 			&src,
-			background_surface,
-			&dst,
-			SDL_SCALEMODE_NEAREST
+			&dst
 			);
 }
 
 void Viewer2d::renderCleanTile(int i, int j) {
+	SDL_SetRenderDrawColor(renderer, 0x80, 0x80, 0x80, 0xff);
 	vec2s pos = worldToScreenCoords(i, j);
 
-	SDL_Rect dst = {
-		(int) pos.raw[0], (int) pos.raw[1],
-		(int) tile_size.raw[0], (int) tile_size.raw[1]
+	SDL_FRect dst = {
+		pos.raw[0], pos.raw[1],
+		tile_size.raw[0], tile_size.raw[1]
 	};
 
-	SDL_FillSurfaceRect(
-			background_surface,
-			&dst,
-			SDL_MapSurfaceRGB(background_surface, 0x77, 0x77, 0x77)
-			);
+	SDL_RenderRect(renderer, &dst);
+}
 
-	dst.x++; dst.y++; dst.w--; dst.h--;
-	dst.x++; dst.y++; dst.w--; dst.h--;
+void Viewer2d::renderSelection(void) {
+	const auto& selection = tool_list.getSelection();
 
-	SDL_FillSurfaceRect(
-			background_surface,
-			&dst,
-			SDL_MapSurfaceRGB(background_surface, 0x00, 0x00, 0x00)
-			);
+	if(!selection.active) {
+		return;
+	}
+
+	vec2s min = worldToScreenCoords(POINT2I_TO_VEC2S(selection.min));
+	vec2s max = worldToScreenCoords(POINT2I_TO_VEC2S(selection.max));
+	vec2s size = glms_vec2_sub(max, min);
+
+	SDL_FRect screen_rect = {
+		0, 0, (float) background_width, (float) background_height
+	};
+
+	SDL_FRect selection_rect = {
+		min.raw[0],  min.raw[1],
+		size.raw[0], size.raw[1]
+	};
+
+	SDL_FRect intersect;
+
+	SDL_GetRectIntersectionFloat(&screen_rect, &selection_rect, &intersect);
+	
+	SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0x80);
+	SDL_RenderFillRect(renderer, &intersect);
 }

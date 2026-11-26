@@ -15,8 +15,8 @@ class Viewer2d {
 		static constexpr int background_width = 800;
 		static constexpr int background_height = 800;
 
+		SDL_Renderer *renderer = nullptr;
 		SDL_Texture *background_texture = nullptr;
-		SDL_Surface *background_surface = nullptr;
 
 		const vec2s background_pixel_size = {float(background_width), float(background_height)};
 
@@ -32,15 +32,18 @@ class Viewer2d {
 		EditMode edit_mode = EditMode::WALL;
 		World::TextureType edit_texture_type = World::TextureType::WALL;
 
-		Viewer2d(SDL_Texture *background_texture, const TextureList& texture_list, ToolList& tool_list);
+		Viewer2d(SDL_Renderer *renderer, SDL_Texture *background_texture, const TextureList& texture_list, ToolList& tool_list);
 		void handleInput(World& world);
 		void showComboMenu(void);
 		void showImage(void);
 		void render(const World &world);
 		void renderTiles(const World &world);
+		vec2s worldToScreenCoords(vec2s pos) const;
 		vec2s worldToScreenCoords(float i, float j) const;
 		void renderTile(const World& world, int i, int j);
 		void renderCleanTile(int i, int j);
+
+		void renderSelection(void);
 };
 
 #endif

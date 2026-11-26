@@ -3,7 +3,7 @@
 #include <cstring>
 #include <stb_image.h>
 
-std::unique_ptr<TextureList> TextureList::load(const char *filename, int cell_width, int cell_height) {
+std::unique_ptr<TextureList> TextureList::load(SDL_Renderer *renderer, const char *filename, int cell_width, int cell_height) {
 	if(filename == nullptr || filename[0] == '\0') {
 		return nullptr;
 	}
@@ -13,7 +13,7 @@ std::unique_ptr<TextureList> TextureList::load(const char *filename, int cell_wi
 	}
 
 	int w, h;
-	unsigned char *pixels = stbi_load(filename, &w, &h, NULL, 4);
+	uint32_t *pixels = (uint32_t *) stbi_load(filename, &w, &h, NULL, 4);
 
 	if(pixels == nullptr) {
 		return nullptr;
@@ -31,18 +31,26 @@ std::unique_ptr<TextureList> TextureList::load(const char *filename, int cell_wi
 		return nullptr;
 	}
 
-	return std::unique_ptr<TextureList>(new TextureList(surface, pixels, cell_width, cell_height));
+	SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+	if(texture == nullptr) {
+		SDL_DestroySurface(surface);
+		stbi_image_free(pixels);
+		return nullptr;
+	}
+
+	SDL_DestroySurface(surface);
+
+	return std::unique_ptr<TextureList>(new TextureList(texture, pixels, cell_width, cell_height));
 }
 
 TextureList::~TextureList(void) {
-	void *pixels = surface->pixels;
-	SDL_DestroySurface(surface);
-
+	SDL_DestroyTexture(texture);
 	stbi_image_free(pixels);
 }
 
-SDL_Surface * TextureList::getSurface(void) const {
-	return surface;
+SDL_Texture * TextureList::getTexture(void) const {
+	return texture;
 }
 
 SDL_Rect TextureList::getCellRect(int cell) const {
@@ -51,6 +59,15 @@ SDL_Rect TextureList::getCellRect(int cell) const {
 		((cell / num_cells_x) * cell_height),
 		(cell_width),
 		(cell_height)
+	};
+}
+
+SDL_FRect TextureList::getCellFRect(int cell) const {
+	return SDL_FRect{
+		(float) ((cell % num_cells_x) * cell_width),
+		(float) ((cell / num_cells_x) * cell_height),
+		(float) (cell_width),
+		(float) (cell_height)
 	};
 }
 
@@ -65,21 +82,19 @@ uint32_t TextureList::getPixel(int cell, int x, int y) const {
 	int i = (cell % num_cells_x) * cell_width + x;
 	int j = (cell / num_cells_x) * cell_height + y;
 
-	if(i < 0 || j < 0 || i >= surface->w || j >= surface->h) {
+	if(i < 0 || j < 0 || i >= texture->w || j >= texture->h) {
 		return 0;
 	}
 
-	uint32_t *pixels = (uint32_t *) surface->pixels;
-
-	return pixels[i + j * surface->w];
+	return pixels[i + j * texture->w];
 }
 
-TextureList::TextureList(SDL_Surface *surface, void *saved_pixels, int cell_width, int cell_height) :
-	surface(surface),
-	saved_pixels(saved_pixels),
+TextureList::TextureList(SDL_Texture *texture, uint32_t *pixels, int cell_width, int cell_height) :
+	texture(texture),
+	pixels(pixels),
 	cell_width(cell_width),
 	cell_height(cell_height),
-	num_cells_x(surface->w / cell_width),
-	num_cells_y(surface->h / cell_height)
+	num_cells_x(texture->w / cell_width),
+	num_cells_y(texture->h / cell_height)
 {
 }

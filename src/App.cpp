@@ -101,7 +101,9 @@ void App::processEvents(void) {
 
 /* Insert your code here. */
 void App::init(void) {
-	texture_list = TextureList::load("tilemap.png", 64, 64);
+	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+	texture_list = TextureList::load(renderer, "tilemap.png", 64, 64);
 	assert(texture_list);
 
 	viewer2d = Viewer2d::create(renderer, *texture_list, tool_list);

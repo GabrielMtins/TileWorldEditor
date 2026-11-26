@@ -12,6 +12,7 @@
 #include <vector>
 
 #define IMVEC2_TO_VEC2S(v) vec2s{(v).x, (v).y}
+#define POINT2I_TO_VEC2S(v) vec2s{(float) (v).first, (float) (v).second}
 
 #include "EditMode.hpp"
 

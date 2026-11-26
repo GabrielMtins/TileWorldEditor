@@ -71,9 +71,11 @@ void ToolList::useSelection(World& world, int i, int j) {
 
 	if(!selection.active) {
 		selection.begin = Point2i(i, j);
+		selection.active = true;
 	}
 
 	selection.end = Point2i(i, j);
+
 	selection.setMinMax();
 }
 
@@ -98,6 +100,10 @@ void ToolList::useBucket(World& world, int i, int j) {
 		to_visit.pop();
 
 		if(!world.inBounds(x, y)) {
+			continue;
+		}
+
+		if(!selection.inBounds(x, y)) {
 			continue;
 		}
 

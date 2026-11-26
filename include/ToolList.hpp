@@ -11,6 +11,12 @@
 	DO(SELECTION, useSelection) \
 	DO(BUCKET,    useBucket   )
 
+#define EXPAND_AS_ENUM(id, ...) id,
+enum class Tool {
+	FOR_TOOL_LIST(EXPAND_AS_ENUM)
+};
+#undef EXPAND_AS_ENUM
+
 struct Selection {
 	bool active = false;
 	Point2i begin = Point2i(0, 0);
@@ -34,19 +40,13 @@ struct Selection {
 		min.first = std::min(begin.first, end.first);
 		min.second = std::min(begin.second, end.second);
 
-		max.first = std::max(begin.first, end.first);
-		max.second = std::max(begin.second, end.second);
+		max.first = std::max(begin.first, end.first) + 1;
+		max.second = std::max(begin.second, end.second) + 1;
 	}
 };
 
 class ToolList {
 	public:
-		#define EXPAND_AS_ENUM(id, ...) id,
-		enum class Tool {
-			FOR_TOOL_LIST(EXPAND_AS_ENUM)
-		};
-		#undef EXPAND_AS_ENUM
-
 		void setEditMode(EditMode mode);
 		void setTool(Tool tool);
 		void setTexture(uint8_t texture_id);
@@ -54,7 +54,7 @@ class ToolList {
 		void use(World& world, int i, int j);
 	
 	private:
-		Tool tool = Tool::BRUSH;
+		Tool tool = Tool::SELECTION;
 		uint8_t texture_id = 1;
 		EditMode mode = EditMode::WALL;
 
