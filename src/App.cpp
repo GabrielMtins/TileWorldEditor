@@ -109,6 +109,9 @@ void App::init(void) {
 	viewer2d = Viewer2d::create(renderer, *texture_list, tool_list);
 	assert(viewer2d);
 
+	texture_viewer = std::make_unique<TextureViewer>(*texture_list, tool_list);
+	assert(texture_viewer);
+
 	for(int i = 0; i < 8; i++) {
 		{
 			auto& cfg = world.getTextureConfig(i, 0, World::TextureType::WALL);
@@ -131,4 +134,5 @@ void App::init(void) {
 
 void App::step(void) {
 	viewer2d->show(world);
+	texture_viewer->show();
 }

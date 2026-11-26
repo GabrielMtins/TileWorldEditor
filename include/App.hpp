@@ -8,6 +8,7 @@
 #include "World.hpp"
 #include "Viewer2d.hpp"
 #include "TextureList.hpp"
+#include "TextureViewer.hpp"
 #include "ToolList.hpp"
 
 class App {
@@ -28,6 +29,7 @@ class App {
 		ToolList tool_list;
 		std::unique_ptr<Viewer2d> viewer2d = nullptr;
 		std::unique_ptr<TextureList> texture_list = nullptr;
+		std::unique_ptr<TextureViewer> texture_viewer = nullptr;
 
 		void processEvents(void);
 
