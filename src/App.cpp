@@ -104,11 +104,27 @@ void App::init(void) {
 	texture_list = TextureList::load("tilemap.png", 64, 64);
 	assert(texture_list);
 
-	viewer2d = Viewer2d::create(renderer, *texture_list);
+	viewer2d = Viewer2d::create(renderer, *texture_list, tool_list);
 	assert(viewer2d);
 
-	auto& cfg = world.getTextureConfig(0, 0, World::TextureType::WALL);
-	cfg.id = 1;
+	for(int i = 0; i < 8; i++) {
+		{
+			auto& cfg = world.getTextureConfig(i, 0, World::TextureType::WALL);
+			cfg.id = 1;
+		}
+		{
+			auto& cfg = world.getTextureConfig(0, i, World::TextureType::WALL);
+			cfg.id = 1;
+		}
+		{
+			auto& cfg = world.getTextureConfig(i, 7, World::TextureType::WALL);
+			cfg.id = 1;
+		}
+		{
+			auto& cfg = world.getTextureConfig(7, i, World::TextureType::WALL);
+			cfg.id = 1;
+		}
+	}
 }
 
 void App::step(void) {

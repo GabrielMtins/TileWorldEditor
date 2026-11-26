@@ -2,7 +2,7 @@
 
 #include <imgui.h>
 
-std::unique_ptr<Viewer2d> Viewer2d::create(SDL_Renderer *renderer, const TextureList& texture_list) {
+std::unique_ptr<Viewer2d> Viewer2d::create(SDL_Renderer *renderer, const TextureList& texture_list, ToolList& tool_list) {
 	SDL_Texture *background_texture = SDL_CreateTexture(
 			renderer,
 			SDL_PIXELFORMAT_RGBA32,
@@ -15,24 +15,27 @@ std::unique_ptr<Viewer2d> Viewer2d::create(SDL_Renderer *renderer, const Texture
 		return nullptr;
 	}
 
-	return std::unique_ptr<Viewer2d>(new Viewer2d(background_texture, texture_list));
+	return std::unique_ptr<Viewer2d>(new Viewer2d(background_texture, texture_list, tool_list));
 }
 
 void Viewer2d::show(World &world) {
 	ImGui::Begin("Editor");
+	showComboMenu();
 	showImage();
+	handleInput(world);
 	ImGui::End();
 
 	render(world);
 }
 
-Viewer2d::Viewer2d(SDL_Texture *background_texture, const TextureList& texture_list) :
+Viewer2d::Viewer2d(SDL_Texture *background_texture, const TextureList& texture_list, ToolList& tool_list) :
 	background_texture(background_texture),
-	texture_list(texture_list)
+	texture_list(texture_list),
+	tool_list(tool_list)
 {
 }
 
-void Viewer2d::handleInput(void) {
+void Viewer2d::handleInput(World& world) {
 	if(!ImGui::IsItemActive()) {
 		return;
 	}
@@ -43,6 +46,40 @@ void Viewer2d::handleInput(void) {
 		delta = glms_vec2_mul(delta, num_tiles_shown);
 
 		camera = glms_vec2_sub(camera, delta);
+		return;
+	}
+
+	vec2s cursor_pos = IMVEC2_TO_VEC2S(ImGui::GetMousePos());
+
+	cursor_pos = glms_vec2_sub(cursor_pos, IMVEC2_TO_VEC2S(ImGui::GetItemRectMin()));
+	cursor_pos = glms_vec2_div(cursor_pos, background_imgui_size);
+	cursor_pos = glms_vec2_mul(cursor_pos, num_tiles_shown);
+	cursor_pos = glms_vec2_add(cursor_pos, camera);
+	cursor_pos = glms_vec2_sub(cursor_pos, half_num_tiles_shown);
+
+	tool_list.setEditMode(edit_mode);
+	tool_list.use(
+			world, 
+			(int) cursor_pos.raw[0],
+			(int) cursor_pos.raw[1]
+			);
+}
+
+void Viewer2d::showComboMenu(void) {
+	if(ImGui::BeginCombo("##texture_type", EditMode_GetLabel(edit_mode))) {
+		for(EditMode i : edit_mode_list) {
+			bool res = ImGui::Selectable(
+					EditMode_GetLabel(i),
+					i == edit_mode
+					);
+
+			if(res) {
+				edit_mode = i;
+			}
+
+		}
+
+		ImGui::EndCombo();
 	}
 }
 
@@ -58,8 +95,6 @@ void Viewer2d::showImage(void) {
 	ImGui::Image(background_texture, avail_size);
 	ImGui::SetCursorPos(cursor);
 	ImGui::InvisibleButton("#invisible_button", avail_size);
-
-	handleInput();
 }
 
 void Viewer2d::render(const World &world) {

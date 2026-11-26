@@ -4,17 +4,17 @@
 #include "Global.hpp"
 #include "World.hpp"
 #include "TextureList.hpp"
+#include "ToolList.hpp"
 
 class Viewer2d {
 	public:
-		static std::unique_ptr<Viewer2d> create(SDL_Renderer *renderer, const TextureList& texture_list);
+		static std::unique_ptr<Viewer2d> create(SDL_Renderer *renderer, const TextureList& texture_list, ToolList& tool_list);
 		void show(World &world);
 
 	private:
 		static constexpr int background_width = 800;
 		static constexpr int background_height = 800;
 
-		SDL_Renderer *renderer = nullptr;
 		SDL_Texture *background_texture = nullptr;
 		SDL_Surface *background_surface = nullptr;
 
@@ -27,11 +27,14 @@ class Viewer2d {
 
 		vec2s camera = glms_vec2_scale(num_tiles_shown, 0.5f);
 		const TextureList& texture_list;
+		ToolList& tool_list;
 
+		EditMode edit_mode = EditMode::WALL;
 		World::TextureType edit_texture_type = World::TextureType::WALL;
 
-		Viewer2d(SDL_Texture *background_texture, const TextureList& texture_list);
-		void handleInput(void);
+		Viewer2d(SDL_Texture *background_texture, const TextureList& texture_list, ToolList& tool_list);
+		void handleInput(World& world);
+		void showComboMenu(void);
 		void showImage(void);
 		void render(const World &world);
 		void renderTiles(const World &world);

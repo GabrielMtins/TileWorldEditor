@@ -8,6 +8,7 @@
 #include "World.hpp"
 #include "Viewer2d.hpp"
 #include "TextureList.hpp"
+#include "ToolList.hpp"
 
 class App {
 	public:
@@ -24,6 +25,7 @@ class App {
 		ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 		World world = World(256, 256);
+		ToolList tool_list;
 		std::unique_ptr<Viewer2d> viewer2d = nullptr;
 		std::unique_ptr<TextureList> texture_list = nullptr;
 

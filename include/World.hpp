@@ -5,15 +5,20 @@
 
 #include <TileWorld.h>
 
+#include <unordered_map>
+
 class World {
 	public:
 		enum class TextureType {
-			FLOOR,
-			CEIL,
+			FLOOR = 0,
 			WINDOW_FLOOR,
+			WALL,
 			WINDOW_CEIL,
-			WALL
+			CEIL,
+			NUM
 		};
+
+		static constexpr int NUM_TEXTURE_TYPE = int(TextureType::NUM);
 
 		enum class SurfaceType {
 			FLOOR,
@@ -26,11 +31,16 @@ class World {
 		size_t getHeight(void) const;
 		bool inBounds(int i, int j) const;
 
+		bool tileEquals(EditMode mode, const TW_Tile& tile, size_t i, size_t j) const;
+
 		TW_Tile& getTile(size_t i, size_t j);
 		const TW_Tile& getTile(size_t i, size_t j) const;
 
 		TW_TextureConfig& getTextureConfig(size_t i, size_t j, TextureType type);
 		const TW_TextureConfig& getTextureConfig(size_t i, size_t j, TextureType type) const;
+
+		static const char * getTextureTypeLabel(int type);
+		static const char * getTextureTypeLabel(TextureType type);
 
 
 	private:
