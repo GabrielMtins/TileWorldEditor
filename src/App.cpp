@@ -101,7 +101,11 @@ void App::processEvents(void) {
 
 /* Insert your code here. */
 void App::init(void) {
-	viewer2d = Viewer2d::create(renderer);
+	texture_list = TextureList::load("tilemap.png", 64, 64);
+	assert(texture_list);
+
+	viewer2d = Viewer2d::create(renderer, *texture_list);
+	assert(viewer2d);
 
 	auto& cfg = world.getTextureConfig(0, 0, World::TextureType::WALL);
 	cfg.id = 1;
@@ -109,5 +113,4 @@ void App::init(void) {
 
 void App::step(void) {
 	viewer2d->show(world);
-	//ImGui::ShowDemoWindow();
 }

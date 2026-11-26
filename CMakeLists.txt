@@ -37,6 +37,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 	"${PROJECT_SOURCE_DIR}/external/cglm/include/"
 	"${PROJECT_SOURCE_DIR}/external/TinyCG/"
 	"${PROJECT_SOURCE_DIR}/external/TileWorld/"
+	"${PROJECT_SOURCE_DIR}/external/stb/"
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE

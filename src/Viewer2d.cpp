@@ -2,20 +2,20 @@
 
 #include <imgui.h>
 
-std::unique_ptr<Viewer2d> Viewer2d::create(SDL_Renderer *renderer) {
-	SDL_Texture *background = SDL_CreateTexture(
+std::unique_ptr<Viewer2d> Viewer2d::create(SDL_Renderer *renderer, const TextureList& texture_list) {
+	SDL_Texture *background_texture = SDL_CreateTexture(
 			renderer,
 			SDL_PIXELFORMAT_RGBA32,
-			SDL_TEXTUREACCESS_TARGET,
+			SDL_TEXTUREACCESS_STREAMING,
 			background_width,
 			background_height
 			);
 
-	if(background == nullptr) {
+	if(background_texture == nullptr) {
 		return nullptr;
 	}
 
-	return std::unique_ptr<Viewer2d>(new Viewer2d(renderer, background));
+	return std::unique_ptr<Viewer2d>(new Viewer2d(background_texture, texture_list));
 }
 
 void Viewer2d::show(World &world) {
@@ -26,9 +26,9 @@ void Viewer2d::show(World &world) {
 	ImGui::End();
 }
 
-Viewer2d::Viewer2d(SDL_Renderer *renderer, SDL_Texture *background) :
-	renderer(renderer),
-	background(background)
+Viewer2d::Viewer2d(SDL_Texture *background_texture, const TextureList& texture_list) :
+	background_texture(background_texture),
+	texture_list(texture_list)
 {
 }
 
@@ -37,17 +37,16 @@ void Viewer2d::showImage(void) {
 
 	num_tiles_shown.raw[0] = num_tiles_shown.raw[1] * avail_size.x / avail_size.y;
 
-	ImGui::Image(background, avail_size);
+	ImGui::Image(background_texture, avail_size);
 }
 
 void Viewer2d::render(const World &world) {
-	SDL_SetRenderTarget(renderer, background);
-	SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xff);
-	SDL_RenderClear(renderer);
+	SDL_LockTextureToSurface(background_texture, nullptr, &background_surface);
+	SDL_ClearSurface(background_surface, 0.0f, 0.0f, 0.0f, 1.0f);
 
 	renderTiles(world);
 
-	SDL_SetRenderTarget(renderer, nullptr);
+	SDL_UnlockTexture(background_texture);
 }
 
 void Viewer2d::renderTiles(const World &world) {
@@ -62,30 +61,40 @@ void Viewer2d::renderTiles(const World &world) {
 	}
 }
 
-void Viewer2d::renderTile(const World& world, int i, int j) {
-	if(!world.inBounds(i, j)) return;
-
-	const vec2s half_size = glms_vec2_scale(num_tiles_shown, 0.5f);
+vec2s Viewer2d::worldToScreenCoords(float i, float j) const {
+	const vec2s half_num_tiles = glms_vec2_scale(num_tiles_shown, 0.5f);
 	const vec2s tile_size = glms_vec2_div(background_pixel_size, num_tiles_shown);
 
 	vec2s pos = {float(i), float(j)};
 
 	pos = glms_vec2_sub(pos, camera);
-	pos = glms_vec2_add(pos, half_size);
+	pos = glms_vec2_add(pos, half_num_tiles);
 	pos = glms_vec2_mul(pos, tile_size);
 
-	SDL_FRect dst = {
-		pos.raw[0], pos.raw[1],
-		tile_size.raw[0], tile_size.raw[1]
+	return pos;
+}
+
+void Viewer2d::renderTile(const World& world, int i, int j) {
+	if(!world.inBounds(i, j)) return;
+	const TW_TextureConfig& cfg = world.getTextureConfig(i, j, edit_texture_type);
+	if(cfg.id == 0) return;
+
+	const vec2s tile_size = glms_vec2_div(background_pixel_size, num_tiles_shown);
+
+	vec2s pos = worldToScreenCoords(i, j);
+
+	SDL_Rect dst = {
+		(int) pos.raw[0], (int) pos.raw[1],
+		(int) tile_size.raw[0], (int) tile_size.raw[1]
 	};
 
-	SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
+	SDL_Rect src = texture_list.getCellRect(cfg.id - 1);
 
-	const TW_TextureConfig& cfg = world.getTextureConfig(i, j, edit_texture_type);
-
-	if(cfg.id == 0) {
-		SDL_RenderRect(renderer, &dst);
-	} else {
-		SDL_RenderFillRect(renderer, &dst);
-	}
+	SDL_BlitSurfaceScaled(
+			texture_list.getSurface(),
+			&src,
+			background_surface,
+			&dst,
+			SDL_SCALEMODE_NEAREST
+			);
 }

@@ -10,3 +10,6 @@
 [submodule "external/TileWorld"]
 	path = external/TileWorld
 	url = https://github.com/GabrielMtins/TileWorld.git
+[submodule "external/stb"]
+	path = external/stb
+	url = https://github.com/nothings/stb.git
