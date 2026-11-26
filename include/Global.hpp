@@ -9,6 +9,6 @@
 #include <memory>
 #include <vector>
 
-#define IMVEC2_TO_VEC2S(v) vec2s{v.x, v.y}
+#define IMVEC2_TO_VEC2S(v) vec2s{(v).x, (v).y}
 
 #endif

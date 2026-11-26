@@ -19,7 +19,12 @@ class Viewer2d {
 		SDL_Surface *background_surface = nullptr;
 
 		const vec2s background_pixel_size = {float(background_width), float(background_height)};
+
+		vec2s background_imgui_size;
 		vec2s num_tiles_shown = {{16, 12}};
+		vec2s half_num_tiles_shown = {0};
+		vec2s tile_size = {0};
+
 		vec2s camera = glms_vec2_scale(num_tiles_shown, 0.5f);
 		const TextureList& texture_list;
 
@@ -32,6 +37,7 @@ class Viewer2d {
 		void renderTiles(const World &world);
 		vec2s worldToScreenCoords(float i, float j) const;
 		void renderTile(const World& world, int i, int j);
+		void renderCleanTile(int i, int j);
 };
 
 #endif
