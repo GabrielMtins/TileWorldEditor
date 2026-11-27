@@ -27,6 +27,20 @@ void ToolList::cancelSelection(void) {
 	selection.active = false;
 }
 
+void ToolList::deleteSelectionContent(World& world) {
+	if(!selection.active) {
+		return;
+	}
+
+	for(int j = selection.min.second; j < selection.max.second; j++) {
+		for(int i = selection.min.first; i < selection.max.first; i++) {
+			useEraser(world, POINT2I_TO_VEC2S(Point2i(i, j)));
+		}
+	}
+
+	cancelSelection();
+}
+
 void ToolList::use(World& world, vec2s pos) {
 	#define EXPAND_AS_CASE(id, func, ...) case Tool::id: func(world, pos); break;
 	switch(tool) {
@@ -79,7 +93,34 @@ void ToolList::useBrush(World& world, vec2s pos) {
 	if(!world.inBounds(pos)) return;
 	if(!selection.inBounds(pos)) return;
 
-	editTile(world, pos);
+	Point2i current_point = VEC2S_TO_POINT2I(pos);
+
+	if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+		brush_data.waiting_for_second_point = true;
+		brush_data.first_point = current_point;
+	}
+
+	if(brush_data.waiting_for_second_point) {
+		brush_data.second_point = VEC2S_TO_POINT2I(pos);
+
+		if(brush_data.second_point != brush_data.first_point) {
+			brush_data.waiting_for_second_point = false;
+
+			if(brush_data.second_point.first == brush_data.first_point.first) {
+				brush_data.axis = Axis::Y;
+			} else {
+				brush_data.axis = Axis::X;
+			}
+		}
+	} else if(ImGui::IsKeyDown(ImGuiKey_LeftShift)){
+		if(brush_data.axis == Axis::X) {
+			current_point.second = brush_data.first_point.second;
+		} else {
+			current_point.first = brush_data.first_point.first;
+		}
+	}
+
+	editTile(world, current_point.first, current_point.second);
 }
 
 void ToolList::useEraser(World& world, vec2s pos) {

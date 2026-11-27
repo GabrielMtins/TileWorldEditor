@@ -68,11 +68,14 @@ void Viewer2d::handleInput(World& world) {
 }
 
 void Viewer2d::handleKeyboard(World& world) {
-	(void) world;
-
 	if(ImGui::IsKeyDown(ImGuiKey_Escape)) {
 		tool_list.cancelSelection();
 	}
+
+	if(ImGui::IsKeyPressed(ImGuiKey_Delete)) {
+		tool_list.deleteSelectionContent(world);
+	}
+
 
 	for(int i = 0; i < int(EditMode::NUM); i++) {
 		if(ImGui::IsKeyDown(ImGuiKey(ImGuiKey_1 + i))) {

@@ -67,6 +67,7 @@ class ToolList {
 		uint8_t getTextureId(void) const;
 		const Selection& getSelection(void) const;
 		void cancelSelection(void);
+		void deleteSelectionContent(World &world);
 		void use(World& world, vec2s pos);
 	
 	private:
@@ -75,6 +76,19 @@ class ToolList {
 		EditMode mode = EditMode::WALL;
 
 		Selection selection;
+
+		enum class Axis {
+			X, Y
+		};
+
+		struct {
+			bool waiting_for_second_point = false;
+
+			Point2i first_point;
+			Point2i second_point;
+
+			Axis axis;
+		} brush_data;
 
 		void editTile(World& world, int i, int j) const;
 		void editTile(World& world, vec2s pos) const;
