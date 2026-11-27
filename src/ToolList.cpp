@@ -82,6 +82,18 @@ void ToolList::useBrush(World& world, vec2s pos) {
 	editTile(world, pos);
 }
 
+void ToolList::useEraser(World& world, vec2s pos) {
+	if(!world.inBounds(pos)) return;
+	if(!selection.inBounds(pos)) return;
+
+	uint8_t old_texture_id = texture_id;
+	texture_id = 0;
+
+	editTile(world, pos);
+
+	texture_id = old_texture_id;
+}
+
 void ToolList::useSelection(World& world, vec2s pos) {
 	if(ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
 		selection.active = false;

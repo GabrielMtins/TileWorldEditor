@@ -7,9 +7,10 @@
 #include <algorithm>
 
 #define FOR_TOOL_LIST(DO) \
-	DO(BRUSH,     useBrush,     ImGuiKey_B, "\uF304") \
-	DO(SELECTION, useSelection, ImGuiKey_V, "\uF245") \
-	DO(BUCKET,    useBucket,    ImGuiKey_F, "\uF575") \
+	DO(SELECTION, useSelection, ImGuiKey_V, "\uf245") \
+	DO(BRUSH,     useBrush,     ImGuiKey_B, "\uf304") \
+	DO(ERASER,    useEraser,    ImGuiKey_X, "\uf12d") \
+	DO(BUCKET,    useBucket,    ImGuiKey_F, "\uf575") \
 	DO(PICKER,    usePicker,    ImGuiKey_I, "\uf1fb")
 
 #define EXPAND_AS_ENUM(id, ...) id,

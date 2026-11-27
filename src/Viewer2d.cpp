@@ -71,6 +71,10 @@ void Viewer2d::handleInput(World& world) {
 }
 
 void Viewer2d::showComboMenu(void) {
+	ImGui::Text("Edit mode:");
+
+	ImGui::SameLine();
+
 	if(ImGui::BeginCombo("##texture_type", EditMode_GetLabel(edit_mode))) {
 		for(EditMode i : edit_mode_list) {
 			bool res = ImGui::Selectable(
@@ -96,6 +100,7 @@ void Viewer2d::showImage(void) {
 	num_tiles_shown.raw[0] = num_tiles_shown.raw[1] * avail_size.x / avail_size.y;
 	half_num_tiles_shown = glms_vec2_scale(num_tiles_shown, 0.5f);
 	tile_size = glms_vec2_div(background_pixel_size, num_tiles_shown);
+	tile_size = glms_vec2_floor(tile_size);
 
 	ImGui::Image(background_texture, avail_size);
 	ImGui::SetCursorPos(cursor);
@@ -150,7 +155,7 @@ void Viewer2d::renderTile(const World& world, int i, int j) {
 	const TW_TextureConfig& cfg = world.getTextureConfig(i, j, edit_texture_type);
 	if(cfg.id == 0) return;
 
-	vec2s pos = worldToScreenCoords(i, j);
+	vec2s pos = glms_vec2_floor(worldToScreenCoords(i, j));
 
 	SDL_FRect dst = {
 		pos.raw[0], pos.raw[1],
