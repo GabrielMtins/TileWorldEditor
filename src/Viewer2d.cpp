@@ -27,6 +27,7 @@ void Viewer2d::show(World &world) {
 	showComboMenu();
 	showImage();
 	handleInput(world);
+	handleKeyboard(world);
 	ImGui::End();
 
 	render(world);
@@ -41,10 +42,6 @@ Viewer2d::Viewer2d(SDL_Renderer *renderer, SDL_Texture *background_texture, cons
 }
 
 void Viewer2d::handleInput(World& world) {
-	if(ImGui::IsKeyDown(ImGuiKey_Escape)) {
-		tool_list.cancelSelection();
-	}
-
 	if(!ImGui::IsItemActive()) {
 		return;
 	}
@@ -68,6 +65,20 @@ void Viewer2d::handleInput(World& world) {
 
 	tool_list.setEditMode(edit_mode);
 	tool_list.use(world, cursor_pos);
+}
+
+void Viewer2d::handleKeyboard(World& world) {
+	(void) world;
+
+	if(ImGui::IsKeyDown(ImGuiKey_Escape)) {
+		tool_list.cancelSelection();
+	}
+
+	for(int i = 0; i < int(EditMode::NUM); i++) {
+		if(ImGui::IsKeyDown(ImGuiKey(ImGuiKey_1 + i))) {
+			edit_mode = EditMode(i);
+		}
+	}
 }
 
 void Viewer2d::showComboMenu(void) {
@@ -100,7 +111,6 @@ void Viewer2d::showImage(void) {
 	num_tiles_shown.raw[0] = num_tiles_shown.raw[1] * avail_size.x / avail_size.y;
 	half_num_tiles_shown = glms_vec2_scale(num_tiles_shown, 0.5f);
 	tile_size = glms_vec2_div(background_pixel_size, num_tiles_shown);
-	tile_size = glms_vec2_floor(tile_size);
 
 	ImGui::Image(background_texture, avail_size);
 	ImGui::SetCursorPos(cursor);
@@ -109,7 +119,7 @@ void Viewer2d::showImage(void) {
 
 void Viewer2d::render(const World &world) {
 	SDL_SetRenderTarget(renderer, background_texture);
-	SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xff);
+	SDL_SetRenderDrawColor(renderer, 0x20, 0x20, 0x20, 0xff);
 	SDL_RenderClear(renderer);
 
 	renderTiles(world);
@@ -131,7 +141,7 @@ void Viewer2d::renderTiles(const World &world) {
 
 	for(int j = min.raw[1]; j <= max.raw[1]; j++) {
 		for(int i = min.raw[0]; i <= max.raw[0]; i++) {
-			renderTile(world, i, j);
+			renderTileByMode(world, i, j);
 		}
 	}
 }
@@ -144,24 +154,64 @@ vec2s Viewer2d::worldToScreenCoords(vec2s pos) const {
 	return pos;
 }
 
-vec2s Viewer2d::worldToScreenCoords(float i, float j) const {
+vec2s Viewer2d::worldToScreenCoords(int i, int j) const {
 	return worldToScreenCoords(vec2s{float(i), float(j)});
 }
 
-void Viewer2d::renderTile(const World& world, int i, int j) {
-	renderCleanTile(i, j);
+SDL_FRect Viewer2d::worldCoordsToScreenTileRect(int i, int j) const {
+	vec2s pos = worldToScreenCoords(i, j);
 
-	if(!world.inBounds(i, j)) return;
-	const TW_TextureConfig& cfg = world.getTextureConfig(i, j, edit_texture_type);
-	if(cfg.id == 0) return;
-
-	vec2s pos = glms_vec2_floor(worldToScreenCoords(i, j));
-
-	SDL_FRect dst = {
+	return SDL_FRect{
 		pos.raw[0], pos.raw[1],
 		tile_size.raw[0], tile_size.raw[1]
 	};
+}
 
+void Viewer2d::renderTileByMode(const World& world, int i, int j) {
+	if(!world.inBounds(i, j)) return;
+
+	switch(edit_mode) {
+		case EditMode::WALL:
+			renderTileByType(world, i, j, World::TextureType::FLOOR);
+			renderDarkTileIfCellIsNotEmpty(world, i, j, World::TextureType::FLOOR);
+			renderTileByType(world, i, j, World::TextureType::WALL);
+			break;
+
+		case EditMode::FLOOR:
+			renderTileByType(world, i, j, World::TextureType::FLOOR);
+			renderTileByType(world, i, j, World::TextureType::WALL);
+			renderDarkTileIfCellIsNotEmpty(world, i, j, World::TextureType::WALL);
+			break;
+
+		case EditMode::CEIL:
+			renderTileByType(world, i, j, World::TextureType::FLOOR);
+			renderDarkTileIfCellIsNotEmpty(world, i, j, World::TextureType::FLOOR);
+			renderTileByType(world, i, j, World::TextureType::WALL);
+			renderDarkTileIfCellIsNotEmpty(world, i, j, World::TextureType::WALL);
+			renderTileByType(world, i, j, World::TextureType::CEIL);
+			break;
+
+		case EditMode::WINDOW_CEIL:
+			renderTileByType(world, i, j, World::TextureType::WINDOW_CEIL);
+			break;
+
+		case EditMode::WINDOW_FLOOR:
+			renderTileByType(world, i, j, World::TextureType::WINDOW_FLOOR);
+			break;
+
+		default:
+			break;
+	}
+
+	renderGridTile(i, j);
+}
+
+void Viewer2d::renderTileByType(const World& world, int i, int j, World::TextureType type) {
+	const TW_TextureConfig& cfg = world.getTextureConfig(i, j, type);
+
+	if(cfg.id == 0) return;
+
+	SDL_FRect dst = worldCoordsToScreenTileRect(i, j);
 	SDL_FRect src = texture_list.getCellFRect(cfg.id);
 
 	SDL_RenderTexture(
@@ -172,16 +222,24 @@ void Viewer2d::renderTile(const World& world, int i, int j) {
 			);
 }
 
-void Viewer2d::renderCleanTile(int i, int j) {
-	SDL_SetRenderDrawColor(renderer, 0x80, 0x80, 0x80, 0xff);
-	vec2s pos = worldToScreenCoords(i, j);
+void Viewer2d::renderGridTile(int i, int j) {
+	SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xff);
 
-	SDL_FRect dst = {
-		pos.raw[0], pos.raw[1],
-		tile_size.raw[0], tile_size.raw[1]
-	};
+	SDL_FRect dst = worldCoordsToScreenTileRect(i, j);
 
 	SDL_RenderRect(renderer, &dst);
+}
+
+void Viewer2d::renderDarkTileIfCellIsNotEmpty(const World& world, int i, int j, World::TextureType type) {
+	const TW_TextureConfig& cfg = world.getTextureConfig(i, j, type);
+
+	if(cfg.id == 0) return;
+
+	SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0x80);
+
+	SDL_FRect dst = worldCoordsToScreenTileRect(i, j);
+
+	SDL_RenderFillRect(renderer, &dst);
 }
 
 void Viewer2d::renderSelection(void) {

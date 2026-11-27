@@ -32,6 +32,7 @@ std::unique_ptr<TextureList> TextureList::load(SDL_Renderer *renderer, const cha
 	}
 
 	SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+	SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
 
 	if(texture == nullptr) {
 		SDL_DestroySurface(surface);

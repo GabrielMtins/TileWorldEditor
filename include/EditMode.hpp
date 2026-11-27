@@ -12,7 +12,7 @@
 	DO(COLOR,        "Color"       )
 
 #define EXPAND_AS_ENUM(id, ...) id,
-enum class EditMode {
+enum class EditMode : int {
 	FOR_EDITMODE_LIST(EXPAND_AS_ENUM)
 	NUM
 };

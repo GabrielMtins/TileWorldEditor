@@ -35,14 +35,23 @@ class Viewer2d {
 
 		Viewer2d(SDL_Renderer *renderer, SDL_Texture *background_texture, const TextureList& texture_list, ToolList& tool_list);
 		void handleInput(World& world);
+		void handleKeyboard(World& world);
 		void showComboMenu(void);
 		void showImage(void);
+
 		void render(const World &world);
 		void renderTiles(const World &world);
 		vec2s worldToScreenCoords(vec2s pos) const;
-		vec2s worldToScreenCoords(float i, float j) const;
-		void renderTile(const World& world, int i, int j);
-		void renderCleanTile(int i, int j);
+		vec2s worldToScreenCoords(int i, int j) const;
+		SDL_FRect worldCoordsToScreenTileRect(int i, int j) const;
+
+		void renderTileByMode(const World& world, int i, int j);
+
+		void renderTileByType(const World& world, int i, int j, World::TextureType type);
+
+		void renderDarkTileIfCellIsNotEmpty(const World& world, int i, int j, World::TextureType type);
+
+		void renderGridTile(int i, int j);
 
 		void renderSelection(void);
 };
